@@ -9,22 +9,21 @@ from app.repositories.decode_run_repository import DecodeRunRepository
 from app.schemas.brief import BriefDecodeResult, DecodeBriefResponse
 
 
-def classify_validation_error(exc: ValidationError) -> str:
-    """Map a Pydantic ValidationError to a SafeError code. Checks severity first — it's
-    the more specific and actionable diagnosis when both errors are present."""
-    errors = exc.errors()
-    for error in errors:
-        if error["loc"][-1] == "severity" and error["type"] in ("literal_error", "enum"):
-            return "invalid_severity"
-    return "missing_field"
+def classify_validation_error(exc: ValidationError) -> tuple[str, str]:
+    """Map a Pydantic ValidationError to a (SafeError code, message) pair. Invalid
+    severity checked first as the more specific diagnosis; anything else (missing
+    or wrong-type fields) maps to `missing_field`, with a message naming the field."""
+    for error in exc.errors():
+        loc = error["loc"]
+        if error["type"] == "literal_error" and len(loc) >= 1 and loc[-1] == "severity":
+            return "invalid_severity", "LLM returned severity outside low/medium/high"
 
+    for error in exc.errors():
+        if error["type"] != "missing":
+            loc = ".".join(str(part) for part in error["loc"])
+            return "missing_field", f"LLM output has an invalid value for field: {loc}"
 
-def _error_message(error_code: str) -> str:
-    messages = {
-        "invalid_severity": "LLM returned severity outside low/medium/high",
-        "missing_field": "LLM output is missing one or more required fields",
-    }
-    return messages[error_code]
+    return "missing_field", "LLM output is missing one or more required fields"
 
 
 async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunRepository) -> DecodeBriefResponse:
@@ -53,8 +52,8 @@ async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunReposito
     try:
         result = BriefDecodeResult.model_validate(parsed)
     except ValidationError as exc:
-        code = classify_validation_error(exc)
-        return await fail(code, _error_message(code), raw_output=raw_output)
+        code, message = classify_validation_error(exc)
+        return await fail(code, message, raw_output=raw_output)
 
     await repo.mark_succeeded(run.id, raw_output=raw_output, result=result)
     return await repo.to_response(run.id)

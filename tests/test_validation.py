@@ -24,14 +24,34 @@ def test_missing_field_is_classified_correctly() -> None:
     payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "goals"}
     with pytest.raises(ValidationError) as exc_info:
         BriefDecodeResult.model_validate(payload)
-    assert classify_validation_error(exc_info.value) == "missing_field"
+    code, message = classify_validation_error(exc_info.value)
+    assert code == "missing_field"
+    assert "missing" in message.lower()
 
 
 def test_invalid_severity_is_classified_correctly() -> None:
     payload = {**VALID_PAYLOAD, "risks": [{**VALID_PAYLOAD["risks"][0], "severity": "critical"}]}
     with pytest.raises(ValidationError) as exc_info:
         BriefDecodeResult.model_validate(payload)
-    assert classify_validation_error(exc_info.value) == "invalid_severity"
+    code, message = classify_validation_error(exc_info.value)
+    assert code == "invalid_severity"
+
+
+def test_wrong_field_type_is_classified_as_missing_field_with_specific_message() -> None:
+    payload = {**VALID_PAYLOAD, "goals": "not a list"}
+    with pytest.raises(ValidationError) as exc_info:
+        BriefDecodeResult.model_validate(payload)
+    code, message = classify_validation_error(exc_info.value)
+    assert code == "missing_field"
+    assert "goals" in message
+
+
+def test_missing_severity_inside_risk_is_classified_as_missing_field() -> None:
+    payload = {**VALID_PAYLOAD, "risks": [{"risk": "r", "reason": "x"}]}
+    with pytest.raises(ValidationError) as exc_info:
+        BriefDecodeResult.model_validate(payload)
+    code, message = classify_validation_error(exc_info.value)
+    assert code == "missing_field"
 
 
 def test_empty_text_request_is_rejected() -> None:
