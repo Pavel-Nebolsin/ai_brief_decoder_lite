@@ -30,7 +30,8 @@ def _error_message(error_code: str) -> str:
 async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunRepository) -> DecodeBriefResponse:
     """Run a brief through the LLM provider and persist the outcome. Domain failures
     (timeout, provider error, invalid output) are recorded as `status: "failed"`,
-    never raised — the response is always a normal DecodeBriefResponse."""
+    never raised. PersistenceError (DB failure) is NOT caught here — it propagates
+    to the API layer as HTTP 500, since there's no run to report back for."""
     run = await repo.create(input_text=text)
 
     async def fail(error_code: str, error_message: str, raw_output: str | None) -> DecodeBriefResponse:
