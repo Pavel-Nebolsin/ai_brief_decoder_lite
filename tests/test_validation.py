@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.brief import BriefDecodeResult, DecodeBriefRequest
-from app.services.decode_service import classify_validation_error
+from app.schemas import BriefDecodeResult, DecodeBriefRequest
+from app.services import classify_validation_error
 
 VALID_PAYLOAD = {
     "summary": "A short summary",

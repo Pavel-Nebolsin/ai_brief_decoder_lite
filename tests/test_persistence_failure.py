@@ -2,7 +2,7 @@ from httpx import AsyncClient
 
 from app.api.deps import get_repository
 from app.main import app
-from app.repositories.decode_run_repository import PersistenceError
+from app.repositories import PersistenceError
 
 
 class _BrokenRepository:

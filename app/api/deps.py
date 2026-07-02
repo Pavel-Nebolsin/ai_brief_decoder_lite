@@ -4,11 +4,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.db.session import get_db_session
-from app.providers.base import LLMProvider
-from app.providers.fake import FakeProvider
-from app.providers.real import RealProvider
-from app.repositories.decode_run_repository import DecodeRunRepository
+from app.db import get_db_session
+from app.providers import FakeProvider, LLMProvider, RealProvider
+from app.repositories import DecodeRunRepository
 
 
 def get_provider() -> LLMProvider:

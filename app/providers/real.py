@@ -1,7 +1,7 @@
 from pydantic_ai import Agent
 
 from app.providers.base import ProviderError
-from app.schemas.brief import BriefDecodeResult
+from app.schemas import BriefDecodeResult
 
 _SYSTEM_PROMPT = (
     "You are a project analyst. Given a client brief, extract a structured summary: "

@@ -5,7 +5,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.api.deps import get_provider
 from app.main import app
-from app.providers.fake import FakeProvider
+from app.providers import FakeProvider
 
 
 @pytest.fixture(autouse=True)

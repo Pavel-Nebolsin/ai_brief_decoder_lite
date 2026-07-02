@@ -4,10 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import get_provider, get_repository
-from app.providers.base import LLMProvider
-from app.repositories.decode_run_repository import DecodeRunRepository
-from app.schemas.brief import DecodeBriefRequest, DecodeBriefResponse
-from app.services.decode_service import decode_brief, to_response
+from app.providers import LLMProvider
+from app.repositories import DecodeRunRepository
+from app.schemas import DecodeBriefRequest, DecodeBriefResponse
+from app.services import decode_brief, to_response
 
 router = APIRouter(prefix="/v1/briefs", tags=["briefs"])
 

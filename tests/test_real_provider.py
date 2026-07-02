@@ -1,7 +1,6 @@
 import pytest
 
-from app.providers.base import ProviderError
-from app.providers.real import RealProvider
+from app.providers import ProviderError, RealProvider
 
 
 def test_construction_does_not_require_google_api_key(monkeypatch: pytest.MonkeyPatch) -> None:

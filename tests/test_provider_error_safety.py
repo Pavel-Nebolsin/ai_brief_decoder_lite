@@ -2,7 +2,7 @@ from httpx import AsyncClient
 
 from app.api.deps import get_provider
 from app.main import app
-from app.providers.base import ProviderError
+from app.providers import ProviderError
 
 
 class _LeakyProvider:

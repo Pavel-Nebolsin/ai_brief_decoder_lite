@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1.briefs import router as briefs_router
-from app.repositories.decode_run_repository import PersistenceError
+from app.repositories import PersistenceError
 
 app = FastAPI(title="AI Brief Decoder Lite")
 app.include_router(briefs_router)

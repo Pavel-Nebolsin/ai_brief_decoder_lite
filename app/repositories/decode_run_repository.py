@@ -3,8 +3,8 @@ import uuid
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.decode_run import DecodeRun
-from app.schemas.brief import BriefDecodeResult
+from app.models import DecodeRun
+from app.schemas import BriefDecodeResult
 
 
 class PersistenceError(Exception):
