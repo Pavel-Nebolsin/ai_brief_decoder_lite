@@ -18,12 +18,8 @@ async def decode(
     provider: Annotated[LLMProvider, Depends(get_provider)],
     repo: Annotated[DecodeRunRepository, Depends(get_repository)],
 ) -> DecodeBriefResponse:
-    """Decode a client brief into a structured summary.
-
-    Always responds with HTTP 200. Domain failures (invalid LLM output, provider
-    errors, timeouts) are reported via `status: "failed"` and the `error` field in
-    the response body, not via HTTP error status codes — see `decode_brief` for why.
-    """
+    """Decode a client brief into a structured summary. Always responds with HTTP
+    200 — domain failures are reported via `status: "failed"` and `error`, not HTTP status."""
     return await decode_brief(body.text, provider, repo)
 
 
@@ -32,11 +28,8 @@ async def get_run(
     run_id: uuid.UUID,
     repo: Annotated[DecodeRunRepository, Depends(get_repository)],
 ) -> DecodeBriefResponse:
-    """Fetch a previously created decode run by id.
-
-    Returns 404 if the run id itself is unknown; this is a transport-level
-    "resource not found", distinct from a domain-level decode failure.
-    """
+    """Fetch a previously created decode run by id. Returns 404 if the run id
+    itself is unknown — a transport-level 404, distinct from a domain decode failure."""
     run = await repo.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")

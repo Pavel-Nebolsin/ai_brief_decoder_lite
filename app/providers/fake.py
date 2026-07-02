@@ -34,13 +34,8 @@ def _valid_payload_template(text: str = "") -> dict:
 
 
 class FakeProvider:
-    """Deterministic stand-in for a real LLM provider.
-
-    Failure modes are triggered by literal markers in the input text rather than
-    randomly, so that tests and manual QA can reproduce any specific failure branch
-    (invalid JSON, missing field, bad severity, provider error, timeout) on demand
-    instead of relying on flaky chance.
-    """
+    """Deterministic stand-in for a real LLM provider. Failure modes are triggered
+    by literal markers in the input text, so tests can reproduce any branch on demand."""
 
     async def decode(self, text: str) -> str:
         if "__FAKE_INVALID_JSON__" in text:

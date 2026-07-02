@@ -12,10 +12,8 @@ _SYSTEM_PROMPT = (
 
 
 class RealProvider:
-    """LLM provider backed by Gemini via pydantic_ai. Agent is built lazily, on first
-    decode() call, so GOOGLE_API_KEY is only required when LLM_PROVIDER=real is
-    actually used — and any misconfiguration surfaces as ProviderError, not a raw
-    exception during dependency resolution."""
+    """LLM provider backed by Gemini via pydantic_ai. Agent is built lazily on
+    first decode() so GOOGLE_API_KEY is only needed when this provider is used."""
 
     def __init__(self) -> None:
         self._agent: Agent | None = None

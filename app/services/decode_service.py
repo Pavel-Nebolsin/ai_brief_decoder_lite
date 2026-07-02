@@ -12,8 +12,7 @@ from app.schemas import BriefDecodeResult, DecodeBriefResponse, SafeError
 
 def classify_validation_error(exc: ValidationError) -> tuple[str, str]:
     """Map a Pydantic ValidationError to a (SafeError code, message) pair. Invalid
-    severity checked first as the more specific diagnosis; anything else (missing
-    or wrong-type fields) maps to `missing_field`, with a message naming the field."""
+    severity is checked first as the more specific diagnosis."""
     for error in exc.errors():
         loc = error["loc"]
         if error["type"] == "literal_error" and len(loc) >= 1 and loc[-1] == "severity":
@@ -40,9 +39,7 @@ def to_response(run: DecodeRun) -> DecodeBriefResponse:
 
 async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunRepository) -> DecodeBriefResponse:
     """Run a brief through the LLM provider and persist the outcome. Domain failures
-    (timeout, provider error, invalid output) are recorded as `status: "failed"`,
-    never raised. PersistenceError (DB failure) is NOT caught here — it propagates
-    to the API layer as HTTP 500, since there's no run to report back for."""
+    are recorded as `status: "failed"`; PersistenceError propagates as HTTP 500."""
     run = await repo.create(input_text=text)
 
     async def fail(error_code: str, error_message: str, raw_output: str | None) -> DecodeBriefResponse:

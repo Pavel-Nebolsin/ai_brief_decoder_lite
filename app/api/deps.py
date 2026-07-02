@@ -10,11 +10,8 @@ from app.repositories import DecodeRunRepository
 
 
 def get_provider() -> LLMProvider:
-    """Resolve the configured LLM provider (FastAPI dependency).
-
-    Only "fake" and "real" are implemented; any other LLM_PROVIDER value is a
-    hard configuration error rather than a silent fallback.
-    """
+    """Resolve the configured LLM provider (FastAPI dependency). Any value other
+    than "fake"/"real" is a hard configuration error, not a silent fallback."""
     if settings.llm_provider == "fake":
         return FakeProvider()
     if settings.llm_provider == "real":
