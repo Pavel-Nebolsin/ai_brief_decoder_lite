@@ -12,18 +12,8 @@ _SYSTEM_PROMPT = (
 
 
 class RealProvider:
-    """LLM provider backed by Gemini via pydantic_ai.
-
-    Any exception raised by `agent.run()` (network failure, auth error, rate
-    limiting, model refusal, etc.) is caught and wrapped in ProviderError, so
-    decode_service only ever has to handle the same failure shape it already
-    handles for FakeProvider — it has no knowledge of pydantic_ai internals.
-
-    The Agent is built lazily in __init__ rather than at module import time,
-    so importing this module (e.g. transitively via app.api.deps) never
-    requires GOOGLE_API_KEY to be set — only actually selecting LLM_PROVIDER=real
-    does. This keeps LLM_PROVIDER=fake fully unaffected by this provider's config.
-    """
+    """LLM provider backed by Gemini via pydantic_ai. Agent is built lazily so
+    GOOGLE_API_KEY is only required when LLM_PROVIDER=real is actually selected."""
 
     def __init__(self) -> None:
         self._agent = Agent(
@@ -36,7 +26,6 @@ class RealProvider:
         try:
             result = await self._agent.run(text)
         except Exception as exc:
-            # exc may carry raw SDK/HTTP details (auth errors can echo request
-            # internals) — never forward str(exc) to the client, see ProviderError.
+            # exc may carry raw SDK/HTTP details — never forward str(exc) to the client.
             raise ProviderError("The LLM provider request failed") from exc
         return result.output.model_dump_json()

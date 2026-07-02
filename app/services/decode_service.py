@@ -10,13 +10,8 @@ from app.schemas.brief import BriefDecodeResult, DecodeBriefResponse
 
 
 def classify_validation_error(exc: ValidationError) -> str:
-    """Map a Pydantic ValidationError to a SafeError code.
-
-    Checks for an invalid `severity` value first because it is the more specific
-    diagnosis: a payload can simultaneously be missing other required fields and
-    contain a bad severity value, and "severity is invalid" is a more actionable
-    error message than the generic "missing_field" fallback.
-    """
+    """Map a Pydantic ValidationError to a SafeError code. Checks severity first — it's
+    the more specific and actionable diagnosis when both errors are present."""
     errors = exc.errors()
     for error in errors:
         if error["loc"][-1] == "severity" and error["type"] in ("literal_error", "enum"):
@@ -33,15 +28,9 @@ def _error_message(error_code: str) -> str:
 
 
 async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunRepository) -> DecodeBriefResponse:
-    """Run a brief through the LLM provider and persist the outcome.
-
-    Always returns a DecodeBriefResponse with HTTP 200 semantics in mind — provider
-    timeouts, provider errors, and invalid LLM output are all domain failures, not
-    transport failures. They are recorded via `repo.mark_failed` and returned as a
-    normal response with `status: "failed"`, never raised as an exception. This lets
-    callers (and the frontend) treat "the LLM produced garbage" the same way as any
-    other expected outcome, distinct from the client contract of `res.ok` in HTTP.
-    """
+    """Run a brief through the LLM provider and persist the outcome. Domain failures
+    (timeout, provider error, invalid output) are recorded as `status: "failed"`,
+    never raised — the response is always a normal DecodeBriefResponse."""
     run = await repo.create(input_text=text)
 
     async def fail(error_code: str, error_message: str, raw_output: str | None) -> DecodeBriefResponse:
