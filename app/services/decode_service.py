@@ -4,9 +4,10 @@ import json
 from pydantic import ValidationError
 
 from app.config import settings
+from app.models.decode_run import DecodeRun
 from app.providers.base import LLMProvider, ProviderError
 from app.repositories.decode_run_repository import DecodeRunRepository
-from app.schemas.brief import BriefDecodeResult, DecodeBriefResponse
+from app.schemas.brief import BriefDecodeResult, DecodeBriefResponse, SafeError
 
 
 def classify_validation_error(exc: ValidationError) -> tuple[str, str]:
@@ -26,6 +27,17 @@ def classify_validation_error(exc: ValidationError) -> tuple[str, str]:
     return "missing_field", "LLM output is missing one or more required fields"
 
 
+def to_response(run: DecodeRun) -> DecodeBriefResponse:
+    """Shape a persisted DecodeRun into the public API response schema."""
+    return DecodeBriefResponse(
+        run_id=run.id,
+        status=run.status,
+        result=BriefDecodeResult.model_validate(run.structured_result) if run.structured_result else None,
+        error=SafeError(code=run.error_code, message=run.error_message) if run.error_code else None,
+        created_at=run.created_at,
+    )
+
+
 async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunRepository) -> DecodeBriefResponse:
     """Run a brief through the LLM provider and persist the outcome. Domain failures
     (timeout, provider error, invalid output) are recorded as `status: "failed"`,
@@ -34,8 +46,8 @@ async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunReposito
     run = await repo.create(input_text=text)
 
     async def fail(error_code: str, error_message: str, raw_output: str | None) -> DecodeBriefResponse:
-        await repo.mark_failed(run.id, raw_output=raw_output, error_code=error_code, error_message=error_message)
-        return await repo.to_response(run.id)
+        updated = await repo.mark_failed(run, raw_output=raw_output, error_code=error_code, error_message=error_message)
+        return to_response(updated)
 
     try:
         raw_output = await asyncio.wait_for(provider.decode(text), timeout=settings.llm_timeout_seconds)
@@ -55,5 +67,5 @@ async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunReposito
         code, message = classify_validation_error(exc)
         return await fail(code, message, raw_output=raw_output)
 
-    await repo.mark_succeeded(run.id, raw_output=raw_output, result=result)
-    return await repo.to_response(run.id)
+    updated = await repo.mark_succeeded(run, raw_output=raw_output, result=result)
+    return to_response(updated)

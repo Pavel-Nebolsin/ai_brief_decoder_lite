@@ -7,7 +7,7 @@ from app.api.deps import get_provider, get_repository
 from app.providers.base import LLMProvider
 from app.repositories.decode_run_repository import DecodeRunRepository
 from app.schemas.brief import DecodeBriefRequest, DecodeBriefResponse
-from app.services.decode_service import decode_brief
+from app.services.decode_service import decode_brief, to_response
 
 router = APIRouter(prefix="/v1/briefs", tags=["briefs"])
 
@@ -40,4 +40,4 @@ async def get_run(
     run = await repo.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
-    return await repo.to_response(run_id)
+    return to_response(run)
