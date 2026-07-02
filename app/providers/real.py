@@ -36,5 +36,7 @@ class RealProvider:
         try:
             result = await self._agent.run(text)
         except Exception as exc:
-            raise ProviderError(str(exc)) from exc
+            # exc may carry raw SDK/HTTP details (auth errors can echo request
+            # internals) — never forward str(exc) to the client, see ProviderError.
+            raise ProviderError("The LLM provider request failed") from exc
         return result.output.model_dump_json()

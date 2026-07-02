@@ -53,7 +53,7 @@ async def decode_brief(text: str, provider: LLMProvider, repo: DecodeRunReposito
     except asyncio.TimeoutError:
         return await fail("timeout", "LLM provider timed out", raw_output=None)
     except ProviderError as exc:
-        return await fail("provider_error", str(exc), raw_output=None)
+        return await fail("provider_error", exc.safe_message, raw_output=None)
 
     try:
         parsed = json.loads(raw_output)
