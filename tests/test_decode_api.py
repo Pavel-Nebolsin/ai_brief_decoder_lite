@@ -1,4 +1,7 @@
+import pytest
 from httpx import AsyncClient
+
+from app.config import settings
 
 
 async def test_decode_happy_path(client: AsyncClient) -> None:
@@ -40,3 +43,13 @@ async def test_decode_provider_error_marker(client: AsyncClient) -> None:
 async def test_decode_empty_text_returns_422(client: AsyncClient) -> None:
     response = await client.post("/v1/briefs/decode", json={"text": ""})
     assert response.status_code == 422
+
+
+async def test_decode_timeout_marker(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "llm_timeout_seconds", 0.05)
+    response = await client.post("/v1/briefs/decode", json={"text": "__FAKE_TIMEOUT__ brief"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "failed"
+    assert body["result"] is None
+    assert body["error"]["code"] == "timeout"
